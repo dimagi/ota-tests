@@ -8,6 +8,8 @@ from lxml import etree
 ISO_DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 ISO_DATE_FORMAT = '%Y-%m-%d'
 SYNC_XMLNS = "http://commcarehq.org/sync"
+OPEN_ROSA_RESPONSE_XMLNS = "http://openrosa.org/http/response"
+NATURE_OTA_RESTORE_ERROR = 'ota_restore_error'
 
 
 def json_format_datetime(dt):
@@ -28,19 +30,30 @@ def synclog_id_from_restore_payload(restore_payload):
     return element.findall('{%s}Sync' % SYNC_XMLNS)[0].findall('{%s}restore_id' % SYNC_XMLNS)[0].text
 
 
-def get_restore_payload(endpoint_url, domain, user, since=None):
+def message_nature_from_restore_payload(restore_payload):
+    element = ElementTree.fromstring(restore_payload)
+    return element.find('{%s}message' % OPEN_ROSA_RESPONSE_XMLNS).attrib['nature']
+
+
+def get_restore_response(endpoint_url, domain, user, since=None, state_hash=None):
     if endpoint_url[-1] == '/':
         endpoint_url = endpoint_url[:-1]
 
     headers = {'Authorization': 'Basic ' + base64.b64encode('{}:{}'.format(user.username, user.password))}
     result = requests.get(
-        '{endpoint_url}/{domain}?version=2.0&items=true&user_id={user_id}{since}'.format(
+        '{endpoint_url}/{domain}?version=2.0&items=true&user_id={user_id}{since}{state_hash}'.format(
             endpoint_url=endpoint_url,
             domain=domain,
             user_id=user.user_id,
-            since='&since={}'.format(since) if since else ''),
+            since='&since={}'.format(since) if since else '',
+            state_hash='&state={}'.format(state_hash) if state_hash else ''),
         headers=headers
     )
+    return result
+
+
+def get_restore_payload(endpoint_url, domain, user, since=None, state_hash=None):
+    result = get_restore_response(endpoint_url, domain, user, since, state_hash)
     assert result.status_code == 200
     return result.text
 

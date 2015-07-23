@@ -16,6 +16,7 @@ def post_case_blocks(endpoint_url, case_blocks, form_extras=None, domain=None):
     sending it off to the case (current use case is sync-token pairing)
     """
     domain = domain or form_extras.pop('domain', None)
+    assert domain is not None
     if form_extras is None:
         form_extras = {}
 
