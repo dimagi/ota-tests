@@ -6,8 +6,9 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 
 class ConfigWrapper(object):
-    def __init__(self, config):
+    def __init__(self, config, section):
         self.config = config
+        self.section = section
 
         if self.auth_type == 'basic':
             self.auth = HTTPBasicAuth(self.username, self.password)
@@ -15,16 +16,17 @@ class ConfigWrapper(object):
             self.auth = HTTPDigestAuth(self.username, self.password)
 
     def __getattr__(self, item):
-        return self.config.get('main', item)
+        return self.config.get(self.section, item)
 
 
 @pytest.fixture(scope="session")
 def config():
     config_file = os.environ['CONFIG']
+    config_section = os.environ['SECTION']
 
     config = ConfigParser.ConfigParser()
     config.read(config_file)
-    return ConfigWrapper(config)
+    return ConfigWrapper(config, config_section)
 
 
 @pytest.fixture(scope="module")
