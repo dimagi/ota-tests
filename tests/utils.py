@@ -79,8 +79,8 @@ def post_form_xml(endpoint_url, domain, case_blocks=None, form_id=None, username
         'user_id': user_id or str(uuid4()),
     })
 
-    headers = {'Authorization': 'Basic ' + base64.b64encode('admin:secret')}
-    headers.update(headers or {})
+    headers = headers or {}
+    headers['Authorization'] = 'Basic ' + base64.b64encode('admin:secret')
     result = requests.post(
         '{}/{}'.format(endpoint_url, domain),
         headers=headers,
